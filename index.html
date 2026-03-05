@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentFlow — Crea Agentes de Voz con IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050509;
+  --s1: #0C0C14;
+  --s2: #12121E;
+  --s3: #1A1A2E;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --emerald: #00F5A0;
+  --emerald2: #00C97A;
+  --blue: #4F8EF7;
+  --purple: #9B6DFF;
+  --red: #FF4D6A;
+  --orange: #FF8C42;
+  --text: #F0F0FA;
+  --muted: #5A5A7A;
+  --muted2: #8A8AAA;
+  --grad: linear-gradient(135deg, #00F5A0, #4F8EF7);
+  --grad2: linear-gradient(135deg, #9B6DFF, #4F8EF7);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 3px; }
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.logo {
+  padding: 22px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: var(--grad);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.logo-name {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 10px 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: var(--s2); color: var(--text); }
+.nav-item.active {
+  background: rgba(0,245,160,0.08);
+  color: var(--emerald);
+  border: 1px solid rgba(0,245,160,0.15);
+}
+.nav-item .ni { font-size: 16px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--emerald);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+}
+
+.sidebar-footer {
+  padding: 14px;
+  border-top: 1px solid var(--border);
+}
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--s2);
+  cursor: pointer;
+}
+.user-avatar {
+  width: 32px; height: 32px;
+  background: var(--grad2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-plan { font-size: 11px; color: var(--muted2); }
+
+/* ── MAIN ── */
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* ── TOPBAR ── */
+.topbar {
+  padding: 0 32px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--s1);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.page-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--grad);
+  color: #000;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,245,160,0.25); }
+.btn-ghost {
+  background: var(--s2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+.btn-ghost:hover { background: var(--s3); border-color: rgba(255,255,255,0.15); }
+.btn-danger { background: rgba(255,77,106,0.12); color: var(--red); border: 1px solid rgba(255,77,106,0.2); }
+.btn-danger:hover { background: rgba(255,77,106,0.2); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ── CONTENT ── */
+.content { padding: 28px 32px; flex: 1; }
+
+/* ── PAGES ── */
+.page { display: none; animation: fadeUp 0.2s ease; }
+.page.active { display: block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══════════════════════════════
+   DASHBOARD PAGE
+══════════════════════════════ */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.metric-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.metric-card:hover { border-color: var(--border2); }
+.metric-label { font-size: 12px; color: var(--muted2); font-weight: 500; margin-bottom: 8px; }
+.metric-value {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+.metric-delta { font-size: 12px; color: var(--emerald); }
+.metric-delta.down { color: var(--red); }
+
+.dash-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+.card-body { padding: 20px 22px; }
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.agent-row:last-child { border-bottom: none; }
+.agent-row:hover { background: rgba(255,255,255,0.02); margin: 0 -22px; padding: 12px 22px; }
+.agent-avatar {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.agent-info { flex: 1; min-width: 0; }
+.agent-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.agent-type { font-size: 12px; color: var(--muted2); }
+.agent-stats { text-align: right; }
+.agent-calls { font-size: 14px; font-weight: 700; }
+.agent-calls-label { font-size: 11px; color: var(--muted2); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-active { background: rgba(0,245,160,0.1); color: var(--emerald); }
+.badge-paused { background: rgba(255,140,66,0.1); color: var(--orange); }
+.badge-draft { background: rgba(90,90,122,0.2); color: var(--muted2); }
+.badge-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+/* ══════════════════════════════
+   CREATE AGENT PAGE (MAIN FEATURE)
+══════════════════════════════ */
+.create-layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+
+.prompt-section {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.prompt-header {
+  padding: 22px 24px 0;
+}
+.prompt-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.prompt-subtitle { font-size: 14px; color: var(--muted2); margin-bottom: 20px; }
+
+.prompt-examples {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.example-chip {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.example-chip:hover { border-color: var(--emerald); color: var(--emerald); background: rgba(0,245,160,0.05); }
+
+.prompt-input-wrap {
+  position: relative;
+  margin: 0 24px;
+}
+.prompt-textarea {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px 16px 60px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  resize: none;
+  min-height: 140px;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.6;
+}
+.prompt-textarea:focus { border-color: var(--emerald); }
+.prompt-textarea::placeholder { color: var(--muted); }
+
+.prompt-actions {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.prompt-hints { display: flex; gap: 8px; }
+.prompt-hint {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.prompt-hint:hover { border-color: var(--border2); color: var(--text); }
+
+.generate-btn {
+  background: var(--grad);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.15s;
+}
+.generate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* RESULT SECTION */
+.result-section {
+  padding: 24px;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  display: none;
+}
+.result-section.show { display: block; animation: fadeUp 0.3s ease; }
+
+.result-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.result-tab {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.result-tab.active { color: var(--emerald); border-color: var(--emerald); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeUp 0.15s ease; }
+
+.field-group { margin-bottom: 18px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 6px;
+}
+.field-value {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.field-input {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field-input:focus { border-color: var(--emerald); }
+.field-textarea {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+  transition: border-color 0.2s;
+}
+.field-textarea:focus { border-color: var(--emerald); }
+
+.scenario-list { display: grid; gap: 8px; }
+.scenario-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.scenario-info { display: flex; align-items: center; gap: 10px; }
+.scenario-icon { font-size: 18px; }
+.scenario-name { font-size: 13px; font-weight: 600; }
+.scenario-desc { font-size: 11px; color: var(--muted2); }
+
+/* Toggle */
+.toggle {
+  width: 36px; height: 20px;
+  background: var(--s3);
+  border-radius: 100px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  border: none;
+}
+.toggle.on { background: var(--emerald); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  background: white;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(16px); }
+
+/* VOICE SELECTOR */
+.voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.voice-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.voice-card:hover, .voice-card.selected { border-color: var(--emerald); background: rgba(0,245,160,0.04); }
+.voice-card.selected .voice-name { color: var(--emerald); }
+.voice-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.voice-meta { font-size: 11px; color: var(--muted2); margin-bottom: 8px; }
+.play-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted2);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--s1);
+  border: none;
+  transition: all 0.15s;
+  font-family: 'Instrument Sans', sans-serif;
+}
+.play-btn:hover { color: var(--emerald); }
+
+/* RIGHT PANEL */
+.right-panel { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; }
+
+.panel-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.panel-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-card-icon { font-size: 16px; }
+.panel-card-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: 14px; font-weight: 700; }
+.panel-card-body { padding: 16px 18px; }
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.status-row:last-child { border-bottom: none; }
+.status-label { color: var(--muted2); }
+.status-val { font-weight: 600; }
+.status-val.ok { color: var(--emerald); }
+.status-val.warn { color: var(--orange); }
+
+/* LOADING STATE */
+.loading-bar {
+  height: 2px;
+  background: var(--s3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.loading-bar-fill {
+  height: 100%;
+  background: var(--grad);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+}
+
+.thinking-dots { display: inline-flex; gap: 4px; }
+.thinking-dots span {
+  width: 6px; height: 6px;
+  background: var(--emerald);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
+
+/* ══════════════════════════════
+   AGENTS PAGE
+══════════════════════════════ */
+.agents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.agents-filters { display: flex; gap: 8px; }
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--s1);
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn.active { background: rgba(0,245,160,0.08); color: var(--emerald); border-color: rgba(0,245,160,0.2); }
+.filter-btn:hover { border-color: var(--border2); color: var(--text); }
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.agent-card-full {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.agent-card-full:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+.agent-card-full::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.agent-card-full:hover::before { opacity: 1; }
+.agent-card-full.emerald::before { background: var(--grad); }
+.agent-card-full.purple::before { background: var(--grad2); }
+
+.acf-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.acf-avatar {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.acf-name { font-family: 'Cabinet Grotesk', sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 3px; }
+.acf-role { font-size: 12px; color: var(--muted2); }
+.acf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.acf-stat { background: var(--s2); border-radius: 8px; padding: 10px 12px; }
+.acf-stat-val { font-family: 'Cabinet Grotesk', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+.acf-stat-label { font-size: 11px; color: var(--muted2); }
+.acf-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+/* ══════════════════════════════
+   VOICES PAGE
+══════════════════════════════ */
+.voices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.voice-full-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.voice-full-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.vfc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.vfc-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.vfc-name { font-family: 'Cabinet Grotesk', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 3px; }
+.vfc-meta { font-size: 12px; color: var(--muted2); margin-bottom: 12px; }
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  margin-bottom: 12px;
+}
+.wave-bar {
+  width: 3px;
+  background: var(--emerald);
+  border-radius: 2px;
+  opacity: 0.3;
+  transition: height 0.1s, opacity 0.1s;
+}
+.wave-bar.active { opacity: 1; animation: wave 0.8s ease infinite; }
+@keyframes wave {
+  0%,100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.3); }
+}
+
+/* ══════════════════════════════
+   SETTINGS PAGE
+══════════════════════════════ */
+.settings-grid { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+.settings-nav { display: flex; flex-direction: column; gap: 2px; }
+.settings-nav-item {
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.settings-nav-item.active { background: rgba(0,245,160,0.08); color: var(--emerald); }
+.settings-nav-item:hover:not(.active) { background: var(--s2); color: var(--text); }
+.settings-section { display: none; }
+.settings-section.active { display: block; }
+.api-key-field {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.api-key-field input {
+  flex: 1;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.api-key-field input:focus { border-color: var(--emerald); }
+
+/* ══════════════════════════════
+   NOTIFICATION
+══════════════════════════════ */
+.notif {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--s2);
+  border: 1px solid rgba(0,245,160,0.3);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: var(--emerald);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 9999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  max-width: 320px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.notif.show { transform: translateY(0); opacity: 1; }
+
+/* ══════════════════════════════
+   WAVEFORM ANIMATION (for active agents)
+══════════════════════════════ */
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--emerald);
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--emerald);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+
+/* CHANNEL PILLS */
+.channels { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.channel-pill {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--muted2);
+}
+.channel-pill.active { background: rgba(79,142,247,0.1); border-color: rgba(79,142,247,0.25); color: var(--blue); }
+
+/* EMPTY STATE */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted2);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.empty-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.empty-sub { font-size: 14px; margin-bottom: 20px; }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎙️</div>
+      <div class="logo-name">AgentFlow</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section-label">Principal</div>
+      <button class="nav-item" onclick="showPage('dashboard')">
+        <span class="ni">📊</span> Dashboard
+      </button>
+      <button class="nav-item active" onclick="showPage('create')">
+        <span class="ni">✨</span> Crear Agente
+      </button>
+      <button class="nav-item" onclick="showPage('agents')">
+        <span class="ni">🤖</span> Mis Agentes
+        <span class="nav-badge">3</span>
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px">Recursos</div>
+      <button class="nav-item" onclick="showPage('voices')">
+        <span class="ni">🔊</span> Voces
+      </button>
+      <button class="nav-item" onclick="showPage('scenarios')">
+        <span class="ni">⚡</span> Escenarios
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px">Sistema</div>
+      <button class="nav-item" onclick="showPage('settings')">
+        <span class="ni">⚙️</span> Configuración
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">TU</div>
+        <div>
+          <div class="user-name">Tu Cuenta</div>
+          <div class="user-plan">Plan Pro · 1.240 min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">✨ Crear Agente</div>
+      <div class="topbar-actions">
+        <div class="live-indicator"><div class="live-dot"></div> 3 agentes activos</div>
+        <button class="btn btn-ghost btn-sm">📖 Docs</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ══ PAGE: DASHBOARD ══ -->
+      <div class="page" id="page-dashboard">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Llamadas hoy</div>
+            <div class="metric-value" style="background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">247</div>
+            <div class="metric-delta">↑ +18% vs ayer</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Citas agendadas</div>
+            <div class="metric-value" style="color:var(--blue)">84</div>
+            <div class="metric-delta">↑ +32% esta semana</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Tasa de resolución</div>
+            <div class="metric-value" style="color:var(--emerald)">91%</div>
+            <div class="metric-delta">↑ Sin intervención humana</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Minutos usados</div>
+            <div class="metric-value" style="color:var(--purple)">1.2k</div>
+            <div class="metric-delta down">840 restantes este mes</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Agentes activos</div>
+              <button class="btn btn-ghost btn-sm" onclick="showPage('agents')">Ver todos →</button>
+            </div>
+            <div class="card-body">
+              <div class="agent-row" onclick="showPage('agents')">
+                <div class="agent-avatar" style="background:rgba(0,245,160,0.1)">🏥</div>
+                <div class="agent-info">
+                  <div class="agent-name">Sofia — Clínica Dental</div>
+                  <div class="agent-type">Agente de voz · Español</div>
+                  <div class="channels"><span class="channel-pill active">📞 Voz</span><span class="channel-pill active">💬 WhatsApp</span></div>
+                </div>
+                <div class="agent-stats">
+                  <div class="agent-calls">142</div>
+                  <div class="agent-calls-label">llamadas hoy</div>
+                  <div style="margin-top:4px"><span class="badge badge-active"><span class="badge-dot"></span>Activo</span></div>
+                </div>
+              </div>
+              <div class="agent-row" onclick="showPage('agents')">
+                <div class="agent-avatar" style="background:rgba(79,142,247,0.1)">🍽️</div>
+                <div class="agent-info">
+                  <div class="agent-name">Carlos — Restaurante La Mar</div>
+                  <div class="agent-type">Agente de voz · Español</div>
+                  <div class="channels"><span class="channel-pill active">📞 Voz</span></div>
+                </div>
+                <div class="agent-stats">
+                  <div class="agent-calls">67</div>
+                  <div class="agent-calls-label">llamadas hoy</div>
+                  <div style="margin-top:4px"><span class="badge badge-active"><span class="badge-dot"></span>Activo</span></div>
+                </div>
+              </div>
+              <div class="agent-row" onclick="showPage('agents')">
+                <div class="agent-avatar" style="background:rgba(155,109,255,0.1)">🏠</div>
+                <div class="agent-info">
+                  <div class="agent-name">Luna — Inmobiliaria Costa</div>
+                  <div class="agent-type">Chatbot + Voz · Español</div>
+                  <div class="channels"><span class="channel-pill active">📞 Voz</span><span class="channel-pill active">🌐 Web</span></div>
+                </div>
+                <div class="agent-stats">
+                  <div class="agent-calls">38</div>
+                  <div class="agent-calls-label">llamadas hoy</div>
+                  <div style="margin-top:4px"><span class="badge badge-paused"><span class="badge-dot"></span>Pausado</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Estado del sistema</div></div>
+              <div class="card-body">
+                <div class="status-row"><span class="status-label">ElevenLabs</span><span class="status-val ok">✓ Conectado</span></div>
+                <div class="status-row"><span class="status-label">Make.com</span><span class="status-val ok">✓ Conectado</span></div>
+                <div class="status-row"><span class="status-label">Google Calendar</span><span class="status-val ok">✓ Sincronizado</span></div>
+                <div class="status-row"><span class="status-label">Twilio</span><span class="status-val warn">⚠ Verificar</span></div>
+                <div class="status-row"><span class="status-label">Anthropic API</span><span class="status-val ok">✓ Activo</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Acciones rápidas</div></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="showPage('create')">✨ Crear nuevo agente</button>
+                <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="showPage('voices')">🔊 Gestionar voces</button>
+                <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="showPage('scenarios')">⚡ Ver escenarios</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PAGE: CREATE ══ -->
+      <div class="page active" id="page-create">
+        <div class="create-layout">
+
+          <!-- LEFT: PROMPT INPUT -->
+          <div>
+            <div class="prompt-section">
+              <div class="prompt-header">
+                <div class="prompt-title">Describe tu negocio</div>
+                <div class="prompt-subtitle">Escribe en lenguaje natural qué quieres que haga tu agente. La IA generará toda la configuración automáticamente.</div>
+
+                <div class="prompt-examples">
+                  <div class="example-chip" onclick="fillExample(0)">🏥 Clínica dental</div>
+                  <div class="example-chip" onclick="fillExample(1)">🍽️ Restaurante</div>
+                  <div class="example-chip" onclick="fillExample(2)">🏠 Inmobiliaria</div>
+                  <div class="example-chip" onclick="fillExample(3)">💆 Spa / Bienestar</div>
+                  <div class="example-chip" onclick="fillExample(4)">⚖️ Despacho legal</div>
+                </div>
+              </div>
+
+              <div class="prompt-input-wrap">
+                <textarea class="prompt-textarea" id="mainPrompt" placeholder="Ej: Tengo una clínica dental en Madrid llamada Sonrisas Premium. Quiero un agente de voz que responda llamadas 24/7, informe sobre nuestros tratamientos (implantes, ortodoncia, blanqueamiento), y pueda agendar y cancelar citas en nuestro Google Calendar. Atendemos de lunes a viernes de 9 a 20h y sábados de 9 a 14h. El tono debe ser profesional pero cercano." rows="5"></textarea>
+                <div class="prompt-actions">
+                  <div class="prompt-hints">
+                    <span class="prompt-hint" onclick="addHint('voz')">+ Voz</span>
+                    <span class="prompt-hint" onclick="addHint('whatsapp')">+ WhatsApp</span>
+                    <span class="prompt-hint" onclick="addHint('citas')">+ Citas</span>
+                    <span class="prompt-hint" onclick="addHint('ventas')">+ Ventas</span>
+                  </div>
+                  <button class="generate-btn" id="generateBtn" onclick="generateAgent()">
+                    <span>✨</span> Generar agente
+                  </button>
+                </div>
+              </div>
+
+              <!-- LOADING -->
+              <div id="loadingSection" style="padding:0 24px;display:none">
+                <div style="display:flex;align-items:center;gap:12px;margin-top:16px;margin-bottom:8px">
+                  <div class="thinking-dots"><span></span><span></span><span></span></div>
+                  <span id="loadingText" style="font-size:13px;color:var(--muted2)">Analizando tu negocio...</span>
+                </div>
+                <div class="loading-bar"><div class="loading-bar-fill" id="loadingFill"></div></div>
+              </div>
+
+              <!-- RESULT TABS -->
+              <div class="result-section" id="resultSection">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:18px">✅</span>
+                    <div>
+                      <div style="font-family:'Cabinet Grotesk',sans-serif;font-size:16px;font-weight:800">Agente generado</div>
+                      <div style="font-size:12px;color:var(--muted2)">Revisa y edita antes de publicar</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-primary" onclick="publishAgent()">🚀 Publicar agente</button>
+                </div>
+
+                <div class="result-tabs">
+                  <div class="result-tab active" onclick="showTab('identity')">🤖 Identidad</div>
+                  <div class="result-tab" onclick="showTab('prompt')">📝 Prompt</div>
+                  <div class="result-tab" onclick="showTab('voice')">🔊 Voz</div>
+                  <div class="result-tab" onclick="showTab('scenarios-tab')">⚡ Escenarios</div>
+                </div>
+
+                <!-- TAB: IDENTITY -->
+                <div class="tab-content active" id="tab-identity">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                    <div class="field-group">
+                      <div class="field-label">Nombre del agente</div>
+                      <input class="field-input" id="agentName" value="Sofia">
+                    </div>
+                    <div class="field-group">
+                      <div class="field-label">Rol</div>
+                      <input class="field-input" id="agentRole" value="Recepcionista virtual">
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Sector detectado</div>
+                    <div class="field-value" id="agentSector">🏥 Clínica dental</div>
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Tono de comunicación</div>
+                    <input class="field-input" id="agentTone" value="Profesional y cercano">
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Idioma principal</div>
+                    <input class="field-input" id="agentLang" value="Español (España)">
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Canales de despliegue</div>
+                    <div id="agentChannels" class="channels" style="padding:10px;background:var(--s2);border:1px solid var(--border);border-radius:8px">
+                      <span class="channel-pill active">📞 Voz telefónica</span>
+                      <span class="channel-pill active">💬 WhatsApp</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TAB: PROMPT -->
+                <div class="tab-content" id="tab-prompt">
+                  <div class="field-group">
+                    <div class="field-label">System Prompt generado (editable)</div>
+                    <textarea class="field-textarea" id="systemPrompt" style="min-height:200px"></textarea>
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Información de la empresa</div>
+                    <textarea class="field-textarea" id="companyInfo" style="min-height:120px"></textarea>
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Restricciones del agente</div>
+                    <textarea class="field-textarea" id="restrictions" style="min-height:80px"></textarea>
+                  </div>
+                </div>
+
+                <!-- TAB: VOICE -->
+                <div class="tab-content" id="tab-voice">
+                  <div style="font-size:13px;color:var(--muted2);margin-bottom:14px">Voz recomendada por IA para este tipo de agente. Pulsa ▶️ para escuchar.</div>
+                  <div class="voice-grid" id="voiceSelector">
+                    <div class="voice-card selected" onclick="selectVoice(this,'Rachel')">
+                      <div class="voice-name">Rachel ⭐ Recomendada</div>
+                      <div class="voice-meta">Español · Femenina · Profesional</div>
+                      <button class="play-btn" onclick="playVoice(event,'rachel')">▶️ Preview</button>
+                    </div>
+                    <div class="voice-card" onclick="selectVoice(this,'Valentina')">
+                      <div class="voice-name">Valentina</div>
+                      <div class="voice-meta">Español · Femenina · Cálida</div>
+                      <button class="play-btn" onclick="playVoice(event,'valentina')">▶️ Preview</button>
+                    </div>
+                    <div class="voice-card" onclick="selectVoice(this,'Marco')">
+                      <div class="voice-name">Marco</div>
+                      <div class="voice-meta">Español · Masculina · Formal</div>
+                      <button class="play-btn" onclick="playVoice(event,'marco')">▶️ Preview</button>
+                    </div>
+                    <div class="voice-card" onclick="selectVoice(this,'Elena')">
+                      <div class="voice-name">Elena</div>
+                      <div class="voice-meta">Español · Femenina · Expresiva</div>
+                      <button class="play-btn" onclick="playVoice(event,'elena')">▶️ Preview</button>
+                    </div>
+                  </div>
+                  <div style="margin-top:16px">
+                    <div class="field-label" style="margin-bottom:10px">Parámetros de voz</div>
+                    <div style="display:grid;gap:12px">
+                      <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted2)">Estabilidad</span><span>0.75</span></div>
+                        <input type="range" min="0" max="1" step="0.05" value="0.75" style="width:100%;accent-color:var(--emerald)">
+                      </div>
+                      <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted2)">Similitud</span><span>0.80</span></div>
+                        <input type="range" min="0" max="1" step="0.05" value="0.80" style="width:100%;accent-color:var(--emerald)">
+                      </div>
+                      <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted2)">Expresividad</span><span>0.60</span></div>
+                        <input type="range" min="0" max="1" step="0.05" value="0.60" style="width:100%;accent-color:var(--emerald)">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TAB: SCENARIOS -->
+                <div class="tab-content" id="tab-scenarios-tab">
+                  <div style="font-size:13px;color:var(--muted2);margin-bottom:14px">Escenarios de Make.com recomendados para tu negocio. Activa los que necesitas.</div>
+                  <div class="scenario-list" id="scenarioList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL -->
+          <div class="right-panel">
+            <div class="panel-card">
+              <div class="panel-card-header">
+                <span class="panel-card-icon">💡</span>
+                <div class="panel-card-title">Cómo funciona</div>
+              </div>
+              <div class="panel-card-body">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;gap:12px;align-items:flex-start">
+                    <div style="width:24px;height:24px;background:var(--grad);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;flex-shrink:0">1</div>
+                    <div><div style="font-size:13px;font-weight:600;margin-bottom:2px">Describe tu negocio</div><div style="font-size:12px;color:var(--muted2)">En lenguaje natural, sin tecnicismos</div></div>
+                  </div>
+                  <div style="display:flex;gap:12px;align-items:flex-start">
+                    <div style="width:24px;height:24px;background:var(--grad);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;flex-shrink:0">2</div>
+                    <div><div style="font-size:13px;font-weight:600;margin-bottom:2px">La IA lo configura todo</div><div style="font-size:12px;color:var(--muted2)">Prompt, voz, escenarios, canales</div></div>
+                  </div>
+                  <div style="display:flex;gap:12px;align-items:flex-start">
+                    <div style="width:24px;height:24px;background:var(--grad);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;flex-shrink:0">3</div>
+                    <div><div style="font-size:13px;font-weight:600;margin-bottom:2px">Revisa y publica</div><div style="font-size:12px;color:var(--muted2)">Edita lo que quieras y lanza</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="panel-card-header">
+                <span class="panel-card-icon">🔌</span>
+                <div class="panel-card-title">APIs conectadas</div>
+              </div>
+              <div class="panel-card-body">
+                <div class="status-row"><span class="status-label">🧠 Claude Sonnet</span><span class="status-val ok">✓</span></div>
+                <div class="status-row"><span class="status-label">🔊 ElevenLabs</span><span class="status-val ok">✓</span></div>
+                <div class="status-row"><span class="status-label">⚡ Make.com</span><span class="status-val ok">✓</span></div>
+                <div class="status-row"><span class="status-label">📅 Google Cal</span><span class="status-val ok">✓</span></div>
+                <div class="status-row"><span class="status-label">📱 Twilio</span><span class="status-val warn">Configurar</span></div>
+                <div style="margin-top:12px">
+                  <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="showPage('settings')">⚙️ Gestionar APIs</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="panel-card-header">
+                <span class="panel-card-icon">📊</span>
+                <div class="panel-card-title">Uso del mes</div>
+              </div>
+              <div class="panel-card-body">
+                <div style="margin-bottom:8px">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+                    <span style="color:var(--muted2)">Minutos de voz</span>
+                    <span>1.160 / 2.000</span>
+                  </div>
+                  <div style="background:var(--s3);border-radius:4px;height:6px;overflow:hidden">
+                    <div style="width:58%;height:100%;background:var(--grad);border-radius:4px"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+                    <span style="color:var(--muted2)">Agentes activos</span>
+                    <span>3 / 10</span>
+                  </div>
+                  <div style="background:var(--s3);border-radius:4px;height:6px;overflow:hidden">
+                    <div style="width:30%;height:100%;background:var(--grad2);border-radius:4px"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PAGE: AGENTS ══ -->
+      <div class="page" id="page-agents">
+        <div class="agents-header">
+          <div class="agents-filters">
+            <button class="filter-btn active">Todos (3)</button>
+            <button class="filter-btn">Voz</button>
+            <button class="filter-btn">Chat</button>
+            <button class="filter-btn">Activos</button>
+          </div>
+          <button class="btn btn-primary" onclick="showPage('create')">✨ Nuevo agente</button>
+        </div>
+
+        <div class="agents-grid">
+          <div class="agent-card-full emerald">
+            <div class="acf-top">
+              <div class="acf-avatar" style="background:rgba(0,245,160,0.1)">🏥</div>
+              <span class="badge badge-active"><span class="badge-dot"></span>Activo</span>
+            </div>
+            <div class="acf-name">Sofia</div>
+            <div class="acf-role">Recepcionista · Clínica Dental Sonrisas</div>
+            <div class="channels" style="margin-top:8px">
+              <span class="channel-pill active">📞 Voz</span>
+              <span class="channel-pill active">💬 WhatsApp</span>
+            </div>
+            <div class="acf-stats">
+              <div class="acf-stat"><div class="acf-stat-val" style="color:var(--emerald)">142</div><div class="acf-stat-label">Llamadas hoy</div></div>
+              <div class="acf-stat"><div class="acf-stat-val" style="color:var(--blue)">84</div><div class="acf-stat-label">Citas mes</div></div>
+            </div>
+            <div class="acf-actions">
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">✏️ Editar</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">▶️ Probar</button>
+              <button class="btn btn-ghost btn-sm">⋯</button>
+            </div>
+          </div>
+
+          <div class="agent-card-full purple">
+            <div class="acf-top">
+              <div class="acf-avatar" style="background:rgba(79,142,247,0.1)">🍽️</div>
+              <span class="badge badge-active"><span class="badge-dot"></span>Activo</span>
+            </div>
+            <div class="acf-name">Carlos</div>
+            <div class="acf-role">Asistente · Restaurante La Mar</div>
+            <div class="channels" style="margin-top:8px">
+              <span class="channel-pill active">📞 Voz</span>
+            </div>
+            <div class="acf-stats">
+              <div class="acf-stat"><div class="acf-stat-val" style="color:var(--blue)">67</div><div class="acf-stat-label">Llamadas hoy</div></div>
+              <div class="acf-stat"><div class="acf-stat-val" style="color:var(--purple)">31</div><div class="acf-stat-label">Reservas mes</div></div>
+            </div>
+            <div class="acf-actions">
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">✏️ Editar</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">▶️ Probar</button>
+              <button class="btn btn-ghost btn-sm">⋯</button>
+            </div>
+          </div>
+
+          <div class="agent-card-full">
+            <div class="acf-top">
+              <div class="acf-avatar" style="background:rgba(155,109,255,0.1)">🏠</div>
+              <span class="badge badge-paused"><span class="badge-dot"></span>Pausado</span>
+            </div>
+            <div class="acf-name">Luna</div>
+            <div class="acf-role">Asesora · Inmobiliaria Costa</div>
+            <div class="channels" style="margin-top:8px">
+              <span class="channel-pill active">📞 Voz</span>
+              <span class="channel-pill active">🌐 Web</span>
+            </div>
+            <div class="acf-stats">
+              <div class="acf-stat"><div class="acf-stat-val" style="color:var(--muted2)">0</div><div class="acf-stat-label">Llamadas hoy</div></div>
+              <div class="acf-stat"><div class="acf-stat-val" style="color:var(--purple)">12</div><div class="acf-stat-label">Leads mes</div></div>
+            </div>
+            <div class="acf-actions">
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">✏️ Editar</button>
+              <button class="btn btn-primary btn-sm" style="flex:1;justify-content:center">▶ Activar</button>
+              <button class="btn btn-ghost btn-sm">⋯</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PAGE: VOICES ══ -->
+      <div class="page" id="page-voices">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <div>
+            <div style="font-size:14px;color:var(--muted2)">Powered by ElevenLabs · 48 voces disponibles</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="filter-btn active">Todas</button>
+            <button class="filter-btn">Español</button>
+            <button class="filter-btn">Femenina</button>
+            <button class="filter-btn">Masculina</button>
+          </div>
+        </div>
+        <div class="voices-grid" id="voicesGrid"></div>
+      </div>
+
+      <!-- ══ PAGE: SCENARIOS ══ -->
+      <div class="page" id="page-scenarios">
+        <div style="margin-bottom:24px">
+          <div style="font-size:14px;color:var(--muted2)">Automatizaciones Make.com · Conecta tu agente con el mundo real</div>
+        </div>
+        <div style="display:grid;gap:12px" id="allScenarios"></div>
+      </div>
+
+      <!-- ══ PAGE: SETTINGS ══ -->
+      <div class="page" id="page-settings">
+        <div class="settings-grid">
+          <div class="settings-nav">
+            <div class="settings-nav-item active" onclick="showSettingsSection('api')">🔑 API Keys</div>
+            <div class="settings-nav-item" onclick="showSettingsSection('profile')">🏢 Mi empresa</div>
+            <div class="settings-nav-item" onclick="showSettingsSection('billing')">💳 Plan y facturación</div>
+            <div class="settings-nav-item" onclick="showSettingsSection('team')">👥 Equipo</div>
+          </div>
+          <div>
+            <div class="settings-section active" id="settings-api">
+              <div class="card">
+                <div class="card-header"><div class="card-title">🔑 API Keys</div></div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:18px">
+                  <div>
+                    <div class="field-label" style="margin-bottom:8px">Anthropic (Claude)</div>
+                    <div class="api-key-field">
+                      <input type="password" placeholder="sk-ant-api03-..." value="sk-ant-api03-••••••••••••••••">
+                      <button class="btn btn-ghost btn-sm">👁</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--emerald)">✓ Probar</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="field-label" style="margin-bottom:8px">ElevenLabs</div>
+                    <div class="api-key-field">
+                      <input type="password" placeholder="xi-api-key-..." value="xi-api-key-••••••••••••••••">
+                      <button class="btn btn-ghost btn-sm">👁</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--emerald)">✓ Probar</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="field-label" style="margin-bottom:8px">Make.com Webhook</div>
+                    <div class="api-key-field">
+                      <input type="text" placeholder="https://hook.eu1.make.com/...">
+                      <button class="btn btn-ghost btn-sm" style="color:var(--orange)">⚠ Configurar</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="field-label" style="margin-bottom:8px">Twilio Account SID</div>
+                    <div class="api-key-field">
+                      <input type="password" placeholder="ACxxxxxxxxxxxxxxx">
+                      <button class="btn btn-ghost btn-sm">👁</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--orange)">⚠ Configurar</button>
+                    </div>
+                  </div>
+                  <button class="btn btn-primary" style="width:fit-content">💾 Guardar cambios</button>
+                </div>
+              </div>
+            </div>
+            <div class="settings-section" id="settings-profile">
+              <div class="card">
+                <div class="card-header"><div class="card-title">🏢 Mi empresa</div></div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                  <div class="field-group"><div class="field-label">Nombre de la empresa</div><input class="field-input" value="Mi Empresa SL"></div>
+                  <div class="field-group"><div class="field-label">Email de contacto</div><input class="field-input" type="email" value="hola@miempresa.com"></div>
+                  <div class="field-group"><div class="field-label">Zona horaria</div><input class="field-input" value="Europe/Madrid"></div>
+                  <button class="btn btn-primary" style="width:fit-content">💾 Guardar</button>
+                </div>
+              </div>
+            </div>
+            <div class="settings-section" id="settings-billing">
+              <div class="card">
+                <div class="card-header"><div class="card-title">💳 Plan actual: Pro</div></div>
+                <div class="card-body">
+                  <div class="status-row"><span class="status-label">Plan</span><span class="status-val ok">Pro · €99/mes</span></div>
+                  <div class="status-row"><span class="status-label">Agentes incluidos</span><span class="status-val">10</span></div>
+                  <div class="status-row"><span class="status-label">Minutos/mes</span><span class="status-val">2.000</span></div>
+                  <div class="status-row"><span class="status-label">Próxima factura</span><span class="status-val">1 abril 2026</span></div>
+                  <div style="margin-top:16px;display:flex;gap:8px">
+                    <button class="btn btn-primary">⬆️ Mejorar plan</button>
+                    <button class="btn btn-danger">Cancelar suscripción</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-section" id="settings-team">
+              <div class="card">
+                <div class="card-header"><div class="card-title">👥 Miembros del equipo</div><button class="btn btn-primary btn-sm">+ Invitar</button></div>
+                <div class="card-body">
+                  <div class="agent-row"><div class="user-avatar" style="width:38px;height:38px;font-size:14px">TU</div><div class="agent-info"><div class="agent-name">Tú (Admin)</div><div class="agent-type"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="78191c1511163815111d15080a1d0b19561b1715">[email&#160;protected]</a></div></div><span class="badge badge-active">Admin</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <span id="notifIcon">✅</span>
+  <span id="notifText">Agente creado con éxito</span>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── NAVIGATION ──
+const pageTitles = {
+  dashboard: '📊 Dashboard',
+  create: '✨ Crear Agente',
+  agents: '🤖 Mis Agentes',
+  voices: '🔊 Biblioteca de Voces',
+  scenarios: '⚡ Escenarios Make.com',
+  settings: '⚙️ Configuración'
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[id] || id;
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => { if (n.textContent.toLowerCase().includes(id === 'create' ? 'crear' : id === 'agents' ? 'agentes' : id === 'voices' ? 'voces' : id === 'scenarios' ? 'escenarios' : id === 'settings' ? 'config' : id)) n.classList.add('active'); });
+  if (id === 'voices') renderVoices();
+  if (id === 'scenarios') renderAllScenarios();
+}
+
+// ── EXAMPLES ──
+const examples = [
+  "Tengo una clínica dental en Madrid llamada Sonrisas Premium. Quiero un agente de voz que responda llamadas 24/7, informe sobre nuestros tratamientos (implantes, ortodoncia, blanqueamiento) y pueda agendar y cancelar citas en nuestro Google Calendar. Atendemos de lunes a viernes de 9 a 20h y sábados de 9 a 14h.",
+  "Soy dueño del restaurante La Mar en Barcelona. Necesito un agente que gestione reservas de mesa, informe sobre el menú y horarios, y confirme reservas por WhatsApp. Abrimos de martes a domingo de 13h a 23h.",
+  "Tengo una inmobiliaria en Valencia. Quiero un agente que atienda consultas de compradores y vendedores, capture sus datos de contacto, y coordine visitas a propiedades agendándolas en mi calendario.",
+  "Gestiono un centro de bienestar y spa en Málaga. Necesito un agente que tome reservas para masajes, tratamientos faciales y yoga, informe sobre precios y disponibilidad, y recuerde las citas por WhatsApp 24h antes.",
+  "Soy abogado especializado en derecho laboral. Quiero un agente que filtre las llamadas, recoja información básica del caso del cliente, y agende una consulta inicial de 30 minutos en mi agenda si el caso es de mi especialidad."
+];
+
+function fillExample(i) {
+  document.getElementById('mainPrompt').value = examples[i];
+  document.getElementById('mainPrompt').focus();
+}
+
+function addHint(type) {
+  const ta = document.getElementById('mainPrompt');
+  const hints = {
+    voz: ' Quiero que funcione como agente de voz telefónico.',
+    whatsapp: ' También quiero que atienda por WhatsApp.',
+    citas: ' Debe poder agendar, cancelar y consultar citas en Google Calendar.',
+    ventas: ' Que también pueda hacer seguimiento de leads y cerrar ventas.'
+  };
+  ta.value += hints[type];
+  ta.focus();
+}
+
+// ── AI GENERATION ──
+const loadingSteps = [
+  [10, "Analizando tu negocio..."],
+  [25, "Detectando sector e intenciones..."],
+  [45, "Generando system prompt..."],
+  [65, "Seleccionando voz recomendada..."],
+  [80, "Configurando escenarios Make.com..."],
+  [95, "Aplicando últimos ajustes..."],
+  [100, "¡Agente listo!"]
+];
+
+async function generateAgent() {
+  const prompt = document.getElementById('mainPrompt').value.trim();
+  if (!prompt) { showNotif('⚠️', 'Escribe una descripción de tu negocio primero'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Generando...';
+
+  document.getElementById('loadingSection').style.display = 'block';
+  document.getElementById('resultSection').classList.remove('show');
+
+  // Animate loading bar
+  let stepIdx = 0;
+  const interval = setInterval(() => {
+    if (stepIdx < loadingSteps.length) {
+      const [pct, text] = loadingSteps[stepIdx];
+      document.getElementById('loadingFill').style.width = pct + '%';
+      document.getElementById('loadingText').textContent = text;
+      stepIdx++;
+    }
+  }, 600);
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await response.json();
+    clearInterval(interval);
+    document.getElementById('loadingFill').style.width = '100%';
+    let agent;
+    if (data.agent) {
+      agent = data.agent;
+    } else {
+      agent = getFallbackAgent(prompt);
+    }
+
+    setTimeout(() => {
+      document.getElementById('loadingSection').style.display = 'none';
+      populateAgent(agent);
+      document.getElementById('resultSection').classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = '<span>✨</span> Generar agente';
+      showNotif('✅', '¡Agente generado! Revisa y edita la configuración.');
+    }, 400);
+
+  } catch(e) {
+    clearInterval(interval);
+    const agent = getFallbackAgent(prompt);
+    setTimeout(() => {
+      document.getElementById('loadingSection').style.display = 'none';
+      populateAgent(agent);
+      document.getElementById('resultSection').classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = '<span>✨</span> Generar agente';
+      showNotif('✅', '¡Agente generado con configuración por defecto!');
+    }, 400);
+  }
+}
+
+function getFallbackAgent(prompt) {
+  const isClinica = prompt.toLowerCase().includes('clínica') || prompt.toLowerCase().includes('clinica') || prompt.toLowerCase().includes('dental') || prompt.toLowerCase().includes('médico');
+  const isRest = prompt.toLowerCase().includes('restaurante') || prompt.toLowerCase().includes('comida');
+  const isInmob = prompt.toLowerCase().includes('inmobiliaria') || prompt.toLowerCase().includes('piso') || prompt.toLowerCase().includes('propiedad');
+
+  return {
+    agentName: isClinica ? "Sofia" : isRest ? "Carlos" : isInmob ? "Luna" : "Aria",
+    role: isClinica ? "Recepcionista virtual" : isRest ? "Asistente de reservas" : "Asistente comercial",
+    sector: isClinica ? "🏥 Clínica / Salud" : isRest ? "🍽️ Restauración" : "🏢 Negocio local",
+    tone: "Profesional y cercano",
+    language: "Español (España)",
+    channels: ["📞 Voz telefónica", "💬 WhatsApp"],
+    systemPrompt: `Eres un asistente virtual profesional especializado en atención al cliente. Tu misión es proporcionar información precisa sobre el negocio, gestionar citas y reservas de forma eficiente, y ofrecer una experiencia excepcional a cada cliente. Siempre habla en un tono cálido y profesional. Cuando no tengas información específica, ofrece conectar al cliente con el equipo humano. Mantén las respuestas concisas y útiles.`,
+    companyInfo: `Negocio local comprometido con ofrecer un servicio de calidad. Atención personalizada para cada cliente. Horario de lunes a viernes de 9h a 20h. Contacto disponible por teléfono, WhatsApp y en persona.`,
+    restrictions: "No compartas información personal de otros clientes. No hagas promesas de descuentos no autorizados. No trates temas médicos o legales sin derivar al profesional.",
+    recommendedVoice: "Rachel",
+    scenarios: ["Verificar disponibilidad", "Reservar cita", "Cancelar cita", "Recordatorio 24h", "Capturar lead"]
+  };
+}
+
+function populateAgent(agent) {
+  document.getElementById('agentName').value = agent.agentName || '';
+  document.getElementById('agentRole').value = agent.role || '';
+  document.getElementById('agentSector').textContent = agent.sector || '';
+  document.getElementById('agentTone').value = agent.tone || '';
+  document.getElementById('agentLang').value = agent.language || '';
+  document.getElementById('systemPrompt').value = agent.systemPrompt || '';
+  document.getElementById('companyInfo').value = agent.companyInfo || '';
+  document.getElementById('restrictions').value = agent.restrictions || '';
+
+  // Channels
+  const ch = document.getElementById('agentChannels');
+  ch.innerHTML = (agent.channels || ['📞 Voz telefónica']).map(c => `<span class="channel-pill active">${c}</span>`).join('');
+
+  // Voice
+  document.querySelectorAll('.voice-card').forEach(v => {
+    v.classList.remove('selected');
+    if (v.querySelector('.voice-name').textContent.includes(agent.recommendedVoice)) v.classList.add('selected');
+  });
+
+  // Scenarios
+  const allScenarios = [
+    { name: "Verificar disponibilidad", desc: "Consulta Google Calendar para ver slots libres", icon: "📅" },
+    { name: "Reservar cita", desc: "Crea evento + confirmación por email/WhatsApp", icon: "✅" },
+    { name: "Cancelar cita", desc: "Elimina evento y notifica a todas las partes", icon: "❌" },
+    { name: "Recordatorio 24h", desc: "Envía recordatorio automático antes de la cita", icon: "⏰" },
+    { name: "Capturar lead", desc: "Guarda datos del cliente en tu CRM", icon: "🎯" },
+    { name: "Resumen diario", desc: "Email con resumen de conversaciones del día", icon: "📊" }
+  ];
+
+  const sl = document.getElementById('scenarioList');
+  sl.innerHTML = allScenarios.map(s => {
+    const on = (agent.scenarios || []).includes(s.name);
+    return `<div class="scenario-item">
+      <div class="scenario-info">
+        <span class="scenario-icon">${s.icon}</span>
+        <div>
+          <div class="scenario-name">${s.name}</div>
+          <div class="scenario-desc">${s.desc}</div>
+        </div>
+      </div>
+      <button class="toggle ${on ? 'on' : ''}" onclick="this.classList.toggle('on')"></button>
+    </div>`;
+  }).join('');
+}
+
+// ── TABS ──
+function showTab(id) {
+  document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── VOICE ──
+function selectVoice(el, name) {
+  document.querySelectorAll('.voice-card').forEach(v => v.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function playVoice(e, voice) {
+  e.stopPropagation();
+  showNotif('🔊', `Reproduciendo vista previa de voz: ${voice}`);
+}
+
+// ── VOICES PAGE ──
+const voiceData = [
+  { name: "Rachel", lang: "Español", gender: "Femenina", style: "Profesional", emoji: "👩" },
+  { name: "Valentina", lang: "Español", gender: "Femenina", style: "Cálida", emoji: "👩‍💼" },
+  { name: "Marco", lang: "Español", gender: "Masculina", style: "Formal", emoji: "👨" },
+  { name: "Elena", lang: "Español", gender: "Femenina", style: "Expresiva", emoji: "👩‍🎤" },
+  { name: "Diego", lang: "Español", gender: "Masculina", style: "Dinámico", emoji: "👨‍💼" },
+  { name: "Sofia", lang: "Español", gender: "Femenina", style: "Amigable", emoji: "👩‍⚕️" },
+  { name: "Lucas", lang: "Español", gender: "Masculina", style: "Casual", emoji: "🧑" },
+  { name: "Isabella", lang: "Inglés", gender: "Femenina", style: "Neutral", emoji: "👩‍💻" },
+];
+
+function renderVoices() {
+  const colors = ['rgba(0,245,160,0.1)','rgba(79,142,247,0.1)','rgba(155,109,255,0.1)','rgba(255,140,66,0.1)'];
+  document.getElementById('voicesGrid').innerHTML = voiceData.map((v, i) => {
+    const bars = Array.from({length:12}, (_,j) => {
+      const h = Math.floor(Math.random()*18)+6;
+      return `<div class="wave-bar" style="height:${h}px"></div>`;
+    }).join('');
+    return `<div class="voice-full-card">
+      <div class="vfc-top">
+        <div class="vfc-avatar" style="background:${colors[i%4]};font-size:22px">${v.emoji}</div>
+        <span class="badge ${i<4?'badge-active':'badge-draft'}">${i<4?'ES':'EN'}</span>
+      </div>
+      <div class="vfc-name">${v.name}</div>
+      <div class="vfc-meta">${v.lang} · ${v.gender} · ${v.style}</div>
+      <div class="waveform">${bars}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="playVoiceCard('${v.name}', this)">▶️ Preview</button>
+        <button class="btn btn-primary btn-sm" onclick="showNotif('✅','Voz ${v.name} asignada al agente')">Usar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function playVoiceCard(name, btn) {
+  const waveform = btn.closest('.voice-full-card').querySelector('.waveform');
+  waveform.querySelectorAll('.wave-bar').forEach(b => b.classList.add('active'));
+  btn.textContent = '⏹ Stop';
+  setTimeout(() => {
+    waveform.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('active'));
+    btn.textContent = '▶️ Preview';
+  }, 3000);
+  showNotif('🔊', `Reproduciendo: ${name}`);
+}
+
+// ── SCENARIOS PAGE ──
+const allScenariosData = [
+  { icon:"📅", name:"Verificar disponibilidad", desc:"El agente consulta Google Calendar en tiempo real para saber qué horarios están libres", active:true },
+  { icon:"✅", name:"Reservar cita", desc:"Crea un evento en Google Calendar y envía confirmación por email y/o WhatsApp", active:true },
+  { icon:"❌", name:"Cancelar cita", desc:"Busca el evento por nombre/fecha, lo elimina y notifica al negocio y al cliente", active:true },
+  { icon:"🔄", name:"Reprogramar cita", desc:"Cancela la cita existente y crea una nueva con los datos actualizados del cliente", active:false },
+  { icon:"⏰", name:"Recordatorio automático", desc:"24 horas antes de la cita, envía un recordatorio personalizado al cliente", active:true },
+  { icon:"🎯", name:"Capturar lead", desc:"Guarda nombre, teléfono, email e interés del cliente en tu CRM (Airtable, HubSpot, Sheets)", active:true },
+  { icon:"⭐", name:"Calificar lead", desc:"Asigna un score automático al lead según sus respuestas y notifica al equipo comercial", active:false },
+  { icon:"📧", name:"Follow-up automático", desc:"Si el cliente no responde en X horas, envía un mensaje de seguimiento personalizado", active:false },
+  { icon:"🔔", name:"Alertar al equipo", desc:"Cuando hay una conversación urgente, notifica inmediatamente al equipo interno", active:true },
+  { icon:"📊", name:"Resumen diario", desc:"Cada día a las 18h envía un email con el resumen de todas las conversaciones", active:false },
+];
+
+function renderAllScenarios() {
+  document.getElementById('allScenarios').innerHTML = allScenariosData.map(s => `
+    <div class="scenario-item" style="border-radius:12px;padding:16px 18px">
+      <div class="scenario-info">
+        <span class="scenario-icon" style="font-size:22px">${s.icon}</span>
+        <div>
+          <div class="scenario-name" style="font-size:14px">${s.name}</div>
+          <div class="scenario-desc">${s.desc}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn btn-ghost btn-sm">⚙️ Config</button>
+        <button class="toggle ${s.active?'on':''}" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── SETTINGS ──
+function showSettingsSection(id) {
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('settings-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── PUBLISH ──
+function publishAgent() {
+  const name = document.getElementById('agentName').value || 'Nuevo agente';
+  showNotif('🚀', `¡${name} publicado y activo! Ya está recibiendo llamadas.`);
+  setTimeout(() => showPage('agents'), 2000);
+}
+
+// ── NOTIFICATION ──
+function showNotif(icon, text) {
+  const notif = document.getElementById('notif');
+  document.getElementById('notifIc
